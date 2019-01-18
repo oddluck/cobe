@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="cobe_hubbot-hubbot",
+    name="cobe_hubbot",
     version="1.0.0",
     author="HubbeKing",
     description="Markov chain based text generator library",
