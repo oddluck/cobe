@@ -30,7 +30,7 @@ class MegaHALTokenizer:
         Capitalize the first alpha character in the reply
         and the first alpha character that follows one of [.?!] and a space.
         """
-        chars = list(u"".join(words))
+        chars = list("".join(words))
         start = True
 
         for i in range(len(chars)):
@@ -46,7 +46,7 @@ class MegaHALTokenizer:
                 if i > 2 and chars[i - 1] in ".?!" and char.isspace():
                     start = True
 
-        return u"".join(chars)
+        return "".join(chars)
 
 
 class CobeTokenizer:
@@ -87,7 +87,7 @@ class CobeTokenizer:
         tokens = self.regex.findall(phrase)
 
         # collapse runs of whitespace into a single space
-        space = u" "
+        space = " "
         for i, token in enumerate(tokens):
             if token[0] == " " and len(token) > 1:
                 tokens[i] = space
@@ -95,7 +95,7 @@ class CobeTokenizer:
         return tokens
 
     def join(self, words):
-        return u"".join(words)
+        return "".join(words)
 
 
 class CobeStemmer:
