@@ -1,5 +1,3 @@
-# Copyright (C) 2012 Peter Teichman
-
 import math
 
 
@@ -75,14 +73,14 @@ class CobeScorer(Scorer):
 
             info -= logprob_cache[edge_id]
 
-        # Approximate the number of cobe 1.2 contexts in this reply, so the
+        # Approximate the number of cobe_hubbot 1.2 contexts in this reply, so the
         # scorer will have similar results.
 
         # First, we have (graph.order - 1) extra edges on either end of the
-        # reply, since cobe 2.0 learns from (_END_TOKEN, _END_TOKEN, ...).
+        # reply, since cobe_hubbot 2.0 learns from (_END_TOKEN, _END_TOKEN, ...).
         n_words = len(edge_ids) - (reply.graph.order - 1) * 2
 
-        # Add back one word for each space between edges, since cobe 1.2
+        # Add back one word for each space between edges, since cobe_hubbot 1.2
         # treated those as separate parts of a context.
         for edge_id in edge_ids:
             if edge_id not in space_cache:

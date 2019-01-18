@@ -1,5 +1,3 @@
-# Copyright (C) 2010 Peter Teichman
-
 import datetime
 import os
 import time

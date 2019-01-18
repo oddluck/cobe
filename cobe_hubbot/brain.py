@@ -1,5 +1,3 @@
-# Copyright (C) 2013 Peter Teichman
-
 import collections
 import itertools
 import logging
@@ -10,13 +8,12 @@ import random
 import re
 import sqlite3
 import time
-import types
 
 from .instatrace import trace, trace_ms, trace_us
 from . import scoring
 from . import tokenizers
 
-log = logging.getLogger("cobe")
+log = logging.getLogger("cobe_hubbot")
 
 
 class CobeError(Exception):
@@ -34,9 +31,11 @@ class Brain:
     SPACE_TOKEN_ID = -1
 
     def __init__(self, filename):
-        """Construct a brain for the specified filename. If that file
+        """
+        Construct a brain for the specified filename. If that file
         doesn't exist, it will be initialized with the default brain
-        settings."""
+        settings.
+        """
         if not os.path.exists(filename):
             log.info("File does not exist. Assuming defaults.")
             Brain.init(filename)
@@ -78,9 +77,11 @@ class Brain:
         self._learning = False
 
     def start_batch_learning(self):
-        """Begin a series of batch learn operations. Data will not be
+        """
+        Begin a series of batch learn operations. Data will not be
         committed to the database until stop_batch_learning is
-        called. Learn text using the normal learn(text) method."""
+        called. Learn text using the normal learn(text) method.
+        """
         self._learning = True
 
         self.graph.cursor().execute("PRAGMA journal_mode=memory")
@@ -112,24 +113,19 @@ class Brain:
         self.graph.commit()
 
     def learn(self, text):
-        """Learn a string of text. If the input is not already
-        Unicode, it will be decoded as utf-8."""
-        if type(text) != types.UnicodeType:
-            # Assume that non-Unicode text is encoded as utf-8, which
-            # should be somewhat safe in the modern world.
-            text = text.decode("utf-8", "ignore")
-
+        """Learn a string of text."""
         tokens = self.tokenizer.split(text)
         trace("Brain.learn_input_token_count", len(tokens))
 
         self._learn_tokens(tokens)
 
     def _to_edges(self, tokens):
-        """This is an iterator that returns the nodes of our graph:
-"This is a test" -> "None This" "This is" "is a" "a test" "test None"
+        """
+        This is an iterator that returns the nodes of our graph:
+        "This is a test" -> "None This" "This is" "is a" "a test" "test None"
 
-Each is annotated with a boolean that tracks whether whitespace was
-found between the two tokens."""
+        Each is annotated with a boolean that tracks whether whitespace was found between the two tokens.
+        """
         # prepend self.order Nones
         chain = self._end_context + tokens + self._end_context
 
@@ -137,7 +133,7 @@ found between the two tokens."""
 
         context = []
 
-        for i in xrange(len(chain)):
+        for i in range(len(chain)):
             context.append(chain[i])
 
             if len(context) == self.order:
@@ -152,8 +148,7 @@ found between the two tokens."""
                 has_space = False
 
     def _to_graph(self, contexts):
-        """This is an iterator that returns each edge of our graph
-with its two nodes"""
+        """This is an iterator that returns each edge of our graph with its two nodes"""
         prev = None
 
         for context in contexts:
@@ -195,12 +190,7 @@ with its two nodes"""
             self.graph.commit()
 
     def reply(self, text, loop_ms=500, max_len=None):
-        """Reply to a string of text. If the input is not already
-        Unicode, it will be decoded as utf-8."""
-        if type(text) != types.UnicodeType:
-            # Assume that non-Unicode text is encoded as utf-8, which
-            # should be somewhat safe in the modern world.
-            text = text.decode("utf-8", "ignore")
+        """Reply to a string of text."""
 
         tokens = self.tokenizer.split(text)
         input_ids = map(self.graph.get_token_by_text, tokens)
@@ -321,7 +311,7 @@ with its two nodes"""
 
     def _babble(self):
         token_ids = []
-        for i in xrange(5):
+        for i in range(5):
             # Generate a few random tokens that can be used as pivots
             token_id = self.graph.get_random_token()
 
@@ -343,7 +333,7 @@ with its two nodes"""
     def _pick_pivot(self, pivot_ids):
         pivot = random.choice(tuple(pivot_ids))
 
-        if type(pivot) is types.TupleType:
+        if isinstance(pivot, tuple):
             # the input word was stemmed to several things
             pivot = random.choice(pivot)
 
@@ -369,9 +359,9 @@ with its two nodes"""
             pivot_id = self._pick_pivot(pivot_ids)
             node = graph.get_random_node_with_token(pivot_id)
 
-            parts = itertools.izip_longest(search(node, end, 1),
-                                           search(node, end, 0),
-                                           fillvalue=None)
+            parts = itertools.zip_longest(search(node, end, 1),
+                                          search(node, end, 0),
+                                          fillvalue=None)
 
             for next, prev in parts:
                 if next:
@@ -387,13 +377,15 @@ with its two nodes"""
 
     @staticmethod
     def init(filename, order=3, tokenizer=None):
-        """Initialize a brain. This brain's file must not already exist.
+        """
+        Initialize a brain. This brain's file must not already exist.
 
-Keyword arguments:
-order -- Order of the forward/reverse Markov chains (integer)
-tokenizer -- One of Cobe, MegaHAL (default Cobe). See documentation
-             for cobe.tokenizers for details. (string)"""
-        log.info("Initializing a cobe brain: %s" % filename)
+        Keyword arguments:
+            order -- Order of the forward/reverse Markov chains (integer)
+            tokenizer -- One of Cobe, MegaHAL (default Cobe).
+            See documentation for cobe_hubbot.tokenizers for details. (string)
+            """
+        log.info("Initializing a cobe_hubbot brain: %s" % filename)
 
         if tokenizer is None:
             tokenizer = "Cobe"
@@ -445,10 +437,10 @@ class Graph:
             self.order = int(self.get_info_text("order"))
 
             self._all_tokens = ",".join(["token%d_id" % i
-                                         for i in xrange(self.order)])
+                                         for i in range(self.order)])
             self._all_tokens_args = " AND ".join(
-                ["token%d_id = ?" % i for i in xrange(self.order)])
-            self._all_tokens_q = ",".join(["?" for i in xrange(self.order)])
+                ["token%d_id = ?" % i for i in range(self.order)])
+            self._all_tokens_q = ",".join(["?" for i in range(self.order)])
             self._last_token = "token%d_id" % (self.order - 1)
 
             # Disable the SQLite cache. Its pages tend to get swapped
@@ -518,7 +510,7 @@ class Graph:
         if len(seq) == 1:
             # Grab the first item from seq. Use an iterator so this works
             # with sets as well as lists.
-            return "(%s)" % iter(seq).next()
+            return "(%s)" % next(iter(seq))
 
         return str(tuple(seq))
 
@@ -635,7 +627,7 @@ class Graph:
     def add_edge(self, prev_node, next_node, has_space):
         c = self.cursor()
 
-        assert type(has_space) == types.BooleanType
+        assert isinstance(has_space, bool)
 
         update_q = "UPDATE edges SET count = count + 1 " \
             "WHERE prev_node = ? AND next_node = ? AND has_space = ?"
@@ -723,7 +715,7 @@ CREATE TABLE tokens (
     is_word INTEGER NOT NULL)""")
 
         tokens = []
-        for i in xrange(order):
+        for i in range(order):
             tokens.append("token%d_id INTEGER REFERENCES token(id)" % i)
 
         log.debug("Creating table: token_stems")
@@ -780,7 +772,7 @@ CREATE INDEX IF NOT EXISTS learn_index ON edges
         # remove the temporary learning index if it exists
         c.execute("DROP INDEX IF EXISTS learn_index")
 
-        token_ids = ",".join(["token%d_id" % i for i in xrange(self.order)])
+        token_ids = ",".join(["token%d_id" % i for i in range(self.order)])
         c.execute("""
 CREATE UNIQUE INDEX IF NOT EXISTS nodes_token_ids on nodes
     (%s)""" % token_ids)
