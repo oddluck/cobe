@@ -3,13 +3,16 @@ import Stemmer
 
 
 class MegaHALTokenizer:
-    """A traditional MegaHAL style tokenizer. This considers any of these
-to be a token:
-  * one or more consecutive alpha characters (plus apostrophe)
-  * one or more consecutive numeric characters
-  * one or more consecutive punctuation/space characters (not apostrophe)
+    """
+    A traditional MegaHAL style tokenizer.
+    This considers any of theseto be a token:
+        * one or more consecutive alpha characters (plus apostrophe)
+        * one or more consecutive numeric characters
+        * one or more consecutive punctuation/space characters (not apostrophe)
 
-This tokenizer ignores differences in capitalization."""
+    This tokenizer ignores differences in capitalization.
+    """
+
     def split(self, phrase):
         if len(phrase) == 0:
             return []
@@ -23,9 +26,10 @@ This tokenizer ignores differences in capitalization."""
         return words
 
     def join(self, words):
-        """Capitalize the first alpha character in the reply and the
-        first alpha character that follows one of [.?!] and a
-        space."""
+        """
+        Capitalize the first alpha character in the reply
+        and the first alpha character that follows one of [.?!] and a space.
+        """
         chars = list(u"".join(words))
         start = True
 
@@ -46,19 +50,18 @@ This tokenizer ignores differences in capitalization."""
 
 
 class CobeTokenizer:
-    """A tokenizer that is somewhat improved from MegaHAL. These are
-considered tokens:
-  * one or more consecutive Unicode word characters (plus apostrophe and dash)
-  * one or more consecutive Unicode non-word characters, possibly with
-    internal whitespace
-  * the whitespace between word or non-word tokens
-  * an HTTP url, [word]: followed by any run of non-space characters.
+    """
+    A tokenizer that is somewhat improved from MegaHAL.
+    These are considered tokens:
+        * one or more consecutive Unicode word characters (plus apostrophe and dash)
+        * one or more consecutive Unicode non-word characters, possibly with internal whitespace
+        * the whitespace between word or non-word tokens
+        * an HTTP url, [word]: followed by any run of non-space characters.
 
-This tokenizer collapses multiple spaces in a whitespace token into a
-single space character.
+    This tokenizer collapses multiple spaces in a whitespace token into a single space character.
+    It preserves differences in case. foo, Foo, and FOO are different tokens.
+    """
 
-It preserves differences in case. foo, Foo, and FOO are different
-tokens."""
     def __init__(self):
         # Add hyphen to the list of possible word characters, so hyphenated
         # words become one token (e.g. hy-phen). But don't remove it from
