@@ -68,11 +68,11 @@ class CobeTokenizer:
         # the list of non-word characters, so if it's found entirely within
         # punctuation it's a normal non-word (e.g. :-( )
 
-        self.regex = re.compile("(\w+:\S+"  # urls
-                                "|[\w'-]+"  # words
-                                "|[^\w\s][^\w]*[^\w\s]"  # multiple punctuation
-                                "|[^\w\s]"  # a single punctuation character
-                                "|\s+)",    # whitespace
+        self.regex = re.compile(r"(\w+://\S+"             # urls
+                                r"|[\w'-]+"               # words
+                                r"|[^\w\s][^\w]*[^\w\s]"  # multiple punctuation
+                                r"|[^\w\s]"               # a single punctuation character
+                                r"|\s+)",                 # whitespace
                                 re.UNICODE)
 
     def split(self, phrase):
@@ -104,7 +104,7 @@ class CobeStemmer:
         self.stemmer = Stemmer.Stemmer(name)
 
     def stem(self, token):
-        if not re.search("\w", token, re.UNICODE):
+        if not re.search(r"\w", token, re.UNICODE):
             return self.stem_nonword(token)
 
         # Don't preserve case when stemming, i.e. create lowercase stems.
@@ -118,8 +118,8 @@ class CobeStemmer:
 
     def stem_nonword(self, token):
         # Stem common smile and frown emoticons down to :) and :(
-        if re.search(":-?[ \)]*\)", token):
+        if re.search(r":-?[ )]*\)", token):
             return ":)"
 
-        if re.search(":-?[' \(]*\(", token):
+        if re.search(r":-?[' (]*\(", token):
             return ":("
