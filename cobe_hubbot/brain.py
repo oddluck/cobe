@@ -2,11 +2,11 @@ import collections
 import itertools
 import logging
 import math
+import MySQLdb
 import operator
 import os
 import random
 import re
-import sqlite3
 import time
 
 from .instatrace import trace, trace_ms, trace_us
@@ -30,18 +30,14 @@ class Brain:
     # in the tokens table
     SPACE_TOKEN_ID = -1
 
-    def __init__(self, filename):
+    def __init__(self, brain_name):
         """
         Construct a brain for the specified filename. If that file
         doesn't exist, it will be initialized with the default brain
         settings.
         """
-        if not os.path.exists(filename):
-            log.info("File does not exist. Assuming defaults.")
-            Brain.init(filename)
-
         with trace_us("Brain.connect_us"):
-            self.graph = graph = Graph(sqlite3.connect(filename))
+            self.graph = graph = Graph(brain_name)
 
         version = graph.get_info_text("version")
         if version != "2":
@@ -376,16 +372,16 @@ class Brain:
                         yield prev + n, node
 
     @staticmethod
-    def init(filename, order=3, tokenizer=None):
+    def init(brain_name, order=3, tokenizer=None):
         """
-        Initialize a brain. This brain's file must not already exist.
+        Initialize a brain. brain_name is used as the MySQL database name
 
         Keyword arguments:
             order -- Order of the forward/reverse Markov chains (integer)
             tokenizer -- One of Cobe, MegaHAL (default Cobe).
             See documentation for cobe_hubbot.tokenizers for details. (string)
             """
-        log.info("Initializing a cobe_hubbot brain: %s" % filename)
+        log.info("Initializing a cobe_hubbot brain: %s" % brain_name)
 
         if tokenizer is None:
             tokenizer = "Cobe"
@@ -394,7 +390,7 @@ class Brain:
             log.info("Unknown tokenizer: %s. Using CobeTokenizer", tokenizer)
             tokenizer = "Cobe"
 
-        graph = Graph(sqlite3.connect(filename))
+        graph = Graph(brain_name)
 
         with trace_us("Brain.init_time_us"):
             graph.init(order, tokenizer)
@@ -425,10 +421,15 @@ class Reply:
 
 
 class Graph:
-    """A special-purpose graph class, stored in a sqlite3 database"""
-    def __init__(self, conn, run_migrations=True):
-        self._conn = conn
-        conn.row_factory = sqlite3.Row
+    """A special-purpose graph class, stored in a mariadb database"""
+    def __init__(self, database_name, run_migrations=True):
+        mysql_host = os.environ.get("MYSQL_HOST")
+        mysql_user = os.environ.get("MYSQL_USER")
+        mysql_password = os.environ.get("MYSQL_PASSWORD")
+        try:
+            self._conn = MySQLdb.connect(host=mysql_host, user=mysql_user, passwd=mysql_password, db=database_name)
+        except Exception:
+            log.exception("Failed to connect to MySQL database for brain {}".format(database_name))
 
         if self.is_initted():
             if run_migrations:
@@ -442,18 +443,8 @@ class Graph:
                 ["token%d_id = ?" % i for i in range(self.order)])
             self._all_tokens_q = ",".join(["?" for i in range(self.order)])
             self._last_token = "token%d_id" % (self.order - 1)
-
-            # Disable the SQLite cache. Its pages tend to get swapped
-            # out, even if the database file is in buffer cache.
-            c = self.cursor()
-            c.execute("PRAGMA cache_size=0")
-            c.execute("PRAGMA page_size=4096")
-
-            # Each of these speed-for-reliability tradeoffs is useful for
-            # bulk learning.
-            c.execute("PRAGMA journal_mode=truncate")
-            c.execute("PRAGMA temp_store=memory")
-            c.execute("PRAGMA synchronous=OFF")
+        else:
+            self.init(order=3, tokenizer="Cobe")
 
     def cursor(self):
         return self._conn.cursor()
@@ -469,7 +460,7 @@ class Graph:
         try:
             self.get_info_text("order")
             return True
-        except sqlite3.OperationalError:
+        except MySQLdb.OperationalError:
             return False
 
     def set_info_text(self, attribute, text):
