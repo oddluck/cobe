@@ -658,7 +658,7 @@ class Graph:
         log.debug("Creating table: info")
         c.execute("""
 CREATE TABLE info (
-    attribute TEXT NOT NULL PRIMARY KEY,
+    attribute VARCHAR(255) NOT NULL PRIMARY KEY,
     text TEXT NOT NULL)""")
 
         log.debug("Creating table: tokens")
