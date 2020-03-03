@@ -7,6 +7,7 @@ setup(
     description="Markov chain based text generator library",
     packages=["cobe_hubbot"],
     install_requires=[
+        "Cython"
         "PyStemmer"
     ]
 )
